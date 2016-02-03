@@ -35,9 +35,19 @@ var sampleUserString = 'Prop0:Patrick Fowler,Prop1:123 Fake St,Prop3:Fakeville,P
  * @returns {Object} A object representation of the input object
  */
 function translateStringToObject(inputString) {
-    var objTemplate = {
+    var finalObject = {};
+    var properties = [];
+    var string = '';
+
+    if (inputString === 'dev') {
+        string = sampleUserString;
+    } else {
+        string = inputString;
     }
-    var properties = sampleUserString.split(',');
+
+    console.log('\nString:\n', string, '\nBeing transformed into an object');
+
+    properties = string.split(',');
 
     properties.forEach(function(property) {
         var prop = property.split(':');
@@ -51,17 +61,18 @@ function translateStringToObject(inputString) {
                 }
 
                 if (configuration[i].objectKey.indexOf('.') > -1 || configuration[i].objectKey.indexOf('[') > -1) {    
-                    utils.createSub(objTemplate, configuration[i].objectKey, prop[1], transform);
+                    utils.createSub(finalObject, configuration[i].objectKey, prop[1], transform);
                 } else {
-                    objTemplate[configuration[i].objectKey] = transform ? transform(prop[1]) : prop[1];    
+                    finalObject[configuration[i].objectKey] = transform ? transform(prop[1]) : prop[1];    
                 }
 
                 break;
             }
         }
     });
-    console.log('Obj', objTemplate);
-    return objTemplate;
+
+    console.log('\nString:\n', string, '\ntransformed into Object:\n', finalObject, '\n');
+    return finalObject;
 }
 
 /**
@@ -70,7 +81,27 @@ function translateStringToObject(inputString) {
  * @returns {String} A string representation of the input object
  */
 function translateObjectToString(inputObject) {
+    var finalString = '';
+    var object = {};
 
+    if (inputObject === 'dev') {
+        object = sampleUser;
+    } else {
+        object = inputObject;    
+    }
+
+    if (object.isArray()) {
+        finalString = utils.processArray(obj);
+    } else {
+        finalString = utils.processObject(obj);
+    }
+    
+
+    
+
+    finalString = utils.startProcessObj(inputObject, '');
+
+    console.log('Object:\n', object, '\n\ntransormed into String:\n', finalString);
 }
 
 
@@ -107,6 +138,38 @@ var utils = (function () {
         }
     }
 
+    function startProcessObj(obj, string) {
+        if (obj.isArray) {
+            string += utils.processArray(obj);
+        } else {
+            
+        }
+
+        return string;
+    }
+
+    function processArray(array) {
+        var string = '';
+        array.forEach(function(item, index) {
+            if (typeof item === 'object') {
+                if (item.isArray()) {
+                    string += processArray(item)
+                }
+            }
+        });
+
+        return string;
+    }
+
+    function processObject(obj) {
+        for (var i = 0; i < configuration.length; i++) {
+            if (property === configuration[i].propKey) {
+                string += property;
+                break;
+            }
+        }
+    }
+
     function createSub(object, keyString, value, transform) {
         if (keyString.indexOf('.') > -1 && keyString.indexOf('[') > -1) {
             
@@ -121,7 +184,6 @@ var utils = (function () {
         } else if (keyString.indexOf('[') > -1) {
             utils.createSubArray(object, keyString, value, transform);
         } else {
-            console.log("TRANSFORM", transform)
             object[keyString] = transform ? transform(value) : value;
         }
     }
