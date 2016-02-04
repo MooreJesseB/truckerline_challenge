@@ -72,6 +72,7 @@ function translateStringToObject(inputString) {
     });
 
     console.log('\nString:\n', string, '\ntransformed into Object:\n', finalObject, '\n');
+
     return finalObject;
 }
 
@@ -86,27 +87,17 @@ function translateObjectToString(inputObject) {
     var object = {};
     var properties = [];
 
+
+
     if (inputObject === 'dev') {
         object = sampleUser;
     } else {
         object = inputObject;    
     }
-    for (var key in object) {
-        if (typeof object[key] === "object") {
-            utils.startProcessObj(object[key], function(returnString) {
-                properties.push(returnString);
-            });
-        } else {
-            for (var i = 0; i < configuration.length; i++) {
-                if (key === configuration[i].objectKey) {
-                    properties.push(configuration[i].propKey + ':' + object[key]);
-                    break;
-                }
-            }
-        }
-    }
-    
-    finalString = properties.join(',');
+
+    console.log('\nObject:\n', object, '\nBeing transformed into an string\n\n');
+
+    finalString = utils.processObj(object, '');
 
     console.log('Object:\n', object, '\n\ntransormed into String:\n', finalString);
 
@@ -129,7 +120,8 @@ var utils = (function () {
         toLongState: toLongState,
         createSub: createSub,
         createSubObj: createSubObj,
-        createSubArray: createSubArray
+        createSubArray: createSubArray,
+        processObj: processObj
     };
     
     // Assume that all States will be properly translated
@@ -147,35 +139,49 @@ var utils = (function () {
         }
     }
 
-    function startProcessObj(obj, callback) {
-        var  returnString = '';
-        var returnArr = [];
-        if (obj.isArray()) {
-
+    function processObj(obj, keyString) {
+        var tempString = '';
+        var tempArr = [];
+        if (Array.isArray(obj)) {
             obj.forEach(function(item, index) {
+                tempString = '';
+                if (keyString) {
+                    tempString += keyString;
+                }
 
-                processArray(item, index, function(key, val) {
-                    for (var i = 0; i < configuration.length; i++) {
-                        if (key === configuration[i]) {
-                            returnArr.push(key.toString() + ':' + val.toString());
-                            break;
-                        }
-                    }
-                });
-
+                tempString += '[' + index + ']';
+                tempArr.push(utils.processObj(item, tempString));
             });
-
-            callback(returnArr.join(',').toString());
-        } else {
+            return tempArr.join(',');
+        } else if (typeof obj === 'object'){
             for (var key in obj) {
-                if (key.isArray()) {
-                    obj[key].forEach(function(item, index) {
-                        utils.processArray(item, index, function(key, val) {
-                            returnArr.push(key.toString() + ':' + val.toString());
-                        });
-                    });
+                tempString = '';
+                if (keyString) {
+                    tempString += keyString + '.' + key;
                 } else {
-                    utils.startProcessObj(obj[key])
+                    tempString += key;
+                }
+                tempArr.push(utils.processObj(obj[key], tempString));
+            }
+            return tempArr.join(',');
+        } else {
+            if (keyString) {
+                tempString += keyString + '.';
+            } else {
+                tempString += keyString;
+            }
+            for (var i = 0; i < configuration.length; i++) {
+                if (configuration[i].objectKey === keyString) {
+                    var config = configuration[i];
+                    var transformedObj = obj;
+
+                    if (config.toProp && typeof config.toProp === 'string') {
+                        transformedObj = utils[config.toProp](obj);
+                    } else if (typeof config.toProp === 'object') {
+                        transformedObj = config.toProp(obj);
+                    }
+
+                    return configuration[i].propKey + ':' + transformedObj;
                 }
             }
         }
@@ -191,7 +197,7 @@ var utils = (function () {
             }
 
         } else if (keyString.indexOf('.') > -1) {
-            utils.createSubObj(object, keyString, value. transform);
+            utils.createSubObj(object, keyString, value, transform);
         } else if (keyString.indexOf('[') > -1) {
             utils.createSubArray(object, keyString, value, transform);
         } else {
