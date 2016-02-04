@@ -1,0 +1,10 @@
+{
+  "name": "Patrick Fowler",
+  "address": {
+      "streetAddresses": ["123 Fake St.", ""],
+      "city": "Fakeville",
+      "state": "CA",
+      "zipCode": "45678"
+  },
+  "yearsExperience": 7
+}

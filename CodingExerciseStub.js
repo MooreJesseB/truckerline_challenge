@@ -21,9 +21,7 @@ var sampleUser = {
         city: 'Fakeville',
         state: 'CA',
         zipCode: '45678'
-    },
-    yearsExperience: 7
-};
+    },yearsExperience: 7};
 
 var sampleUserString = 'Prop0:Patrick Fowler,Prop1:123 Fake St,Prop3:Fakeville,Prop4:California,Prop5:45678,Prop32:7';
 
@@ -45,7 +43,7 @@ function translateStringToObject(inputString) {
         string = inputString;
     }
 
-    console.log('\nString:\n', string, '\nBeing transformed into an object');
+    console.log('\nString:\n', string, '\nBeing transformed into an object...');
 
     properties = string.split(',');
 
@@ -95,11 +93,11 @@ function translateObjectToString(inputObject) {
         object = inputObject;    
     }
 
-    console.log('\nObject:\n', object, '\nBeing transformed into an string\n\n');
+    console.log('\nObject:\n', object, '\n\nBeing transformed into an string...\n');
 
     finalString = utils.processObj(object, '');
 
-    console.log('Object:\n', object, '\n\ntransormed into String:\n', finalString);
+    console.log('Object:\n', object, '\n\ntransormed into String:\n\n', finalString);
 
     return finalString;
 }
