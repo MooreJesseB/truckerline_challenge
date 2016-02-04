@@ -82,26 +82,35 @@ function translateStringToObject(inputString) {
  */
 function translateObjectToString(inputObject) {
     var finalString = '';
+    var midObj = {};
     var object = {};
+    var properties = [];
 
     if (inputObject === 'dev') {
         object = sampleUser;
     } else {
         object = inputObject;    
     }
-
-    if (object.isArray()) {
-        finalString = utils.processArray(obj);
-    } else {
-        finalString = utils.processObject(obj);
+    for (var key in object) {
+        if (typeof object[key] === "object") {
+            utils.startProcessObj(object[key], function(returnString) {
+                properties.push(returnString);
+            });
+        } else {
+            for (var i = 0; i < configuration.length; i++) {
+                if (key === configuration[i].objectKey) {
+                    properties.push(configuration[i].propKey + ':' + object[key]);
+                    break;
+                }
+            }
+        }
     }
     
-
-    
-
-    finalString = utils.startProcessObj(inputObject, '');
+    finalString = properties.join(',');
 
     console.log('Object:\n', object, '\n\ntransormed into String:\n', finalString);
+
+    return finalString;
 }
 
 
@@ -138,34 +147,36 @@ var utils = (function () {
         }
     }
 
-    function startProcessObj(obj, string) {
-        if (obj.isArray) {
-            string += utils.processArray(obj);
+    function startProcessObj(obj, callback) {
+        var  returnString = '';
+        var returnArr = [];
+        if (obj.isArray()) {
+
+            obj.forEach(function(item, index) {
+
+                processArray(item, index, function(key, val) {
+                    for (var i = 0; i < configuration.length; i++) {
+                        if (key === configuration[i]) {
+                            returnArr.push(key.toString() + ':' + val.toString());
+                            break;
+                        }
+                    }
+                });
+
+            });
+
+            callback(returnArr.join(',').toString());
         } else {
-            
-        }
-
-        return string;
-    }
-
-    function processArray(array) {
-        var string = '';
-        array.forEach(function(item, index) {
-            if (typeof item === 'object') {
-                if (item.isArray()) {
-                    string += processArray(item)
+            for (var key in obj) {
+                if (key.isArray()) {
+                    obj[key].forEach(function(item, index) {
+                        utils.processArray(item, index, function(key, val) {
+                            returnArr.push(key.toString() + ':' + val.toString());
+                        });
+                    });
+                } else {
+                    utils.startProcessObj(obj[key])
                 }
-            }
-        });
-
-        return string;
-    }
-
-    function processObject(obj) {
-        for (var i = 0; i < configuration.length; i++) {
-            if (property === configuration[i].propKey) {
-                string += property;
-                break;
             }
         }
     }
