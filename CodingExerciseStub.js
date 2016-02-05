@@ -81,11 +81,7 @@ function translateStringToObject(inputString) {
  */
 function translateObjectToString(inputObject) {
     var finalString = '';
-    var midObj = {};
     var object = {};
-    var properties = [];
-
-
 
     if (inputObject === 'dev') {
         object = sampleUser;
@@ -137,9 +133,19 @@ var utils = (function () {
         }
     }
 
+    /**
+     * Recursive function that steps through all of an objects keys and arrays
+     * processObj
+     * @param {Object} inputObject An arbitrary object to be translated
+     * @param {String} a transforming string that represents the objectKey in configuration
+     * @returns {String} A string representation of the input object
+     */
+    
     function processObj(obj, keyString) {
         var tempString = '';
         var tempArr = [];
+
+        // Process an array
         if (Array.isArray(obj)) {
             obj.forEach(function(item, index) {
                 tempString = '';
@@ -151,6 +157,8 @@ var utils = (function () {
                 tempArr.push(utils.processObj(item, tempString));
             });
             return tempArr.join(',');
+
+        // Process a key
         } else if (typeof obj === 'object'){
             for (var key in obj) {
                 tempString = '';
@@ -162,7 +170,9 @@ var utils = (function () {
                 tempArr.push(utils.processObj(obj[key], tempString));
             }
             return tempArr.join(',');
+
         } else {
+            // End point for recursion.
             if (keyString) {
                 tempString += keyString + '.';
             } else {
@@ -173,6 +183,7 @@ var utils = (function () {
                     var config = configuration[i];
                     var transformedObj = obj;
 
+                    // If this property requires a special transformation
                     if (config.toProp && typeof config.toProp === 'string') {
                         transformedObj = utils[config.toProp](obj);
                     } else if (typeof config.toProp === 'object') {
@@ -185,7 +196,10 @@ var utils = (function () {
         }
     }
 
+    // Recursive function thats sorts which sort of sub object to create.
     function createSub(object, keyString, value, transform) {
+        
+        // There is both a new key and a new array to process
         if (keyString.indexOf('.') > -1 && keyString.indexOf('[') > -1) {
             
             if (keyString.indexOf('.') < keyString.indexOf('[')) {
@@ -194,15 +208,19 @@ var utils = (function () {
                 utils.createSubArray(object, keyString, value, transform);
             }
 
+        // New key to create
         } else if (keyString.indexOf('.') > -1) {
             utils.createSubObj(object, keyString, value, transform);
+        // New array to create
         } else if (keyString.indexOf('[') > -1) {
             utils.createSubArray(object, keyString, value, transform);
+        // Recurse endpoint. Assign value
         } else {
             object[keyString] = transform ? transform(value) : value;
         }
     }
 
+    // Creates a new key
     function createSubObj(object, string, value, transform) {
         var keySplit = string.split('.');
         
@@ -213,6 +231,7 @@ var utils = (function () {
         createSub(object[keySplit[0]], keySplit[1], value, transform);
     }
 
+    // Creates a new array
     function createSubArray(object, string, value, transform) {
         var indexSplit = string.split('[');
         var index = parseInt(indexSplit[1].split(']')[0]);
